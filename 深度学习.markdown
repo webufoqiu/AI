@@ -172,8 +172,6 @@ $$\sum_{i=1}^nca_i=c\sum_{i=1}^na_i$$
 
 
 
-
-
 ### 四、向量(Vector)
 
 #### 定义：
@@ -384,12 +382,11 @@ $$
 =\sigma(x)-\sigma(x)^2
 $$
 
-
 **提取$\sigma(x)$ ，得到： $ \color{red}\sigma '(x)= \sigma(x)(1-\sigma(x))$** 
 
 梯度下降法中，需要对这个Sigmoid函数求导。求导时使用上式会十分方便。
 
-
+划重点：Sigmoid函数求导 ：$ \color{red}\sigma '(x)= \sigma(x)(1-\sigma(x))$
 
 #### 最小值的条件
 
@@ -403,7 +400,7 @@ $$
 
 ![image-20210527225701451](深度学习.assets/image-20210527225701451-1622127422982.png)
 
-此函数，虽然是连续光滑的，但有不只一处增减性的变化，所以，**f'*(*a*) = 0 是函数 *f* (*x*)  在*x* = *a*   处取得最小值的必要条件，仅仅是必要条件**
+此函数，虽然是连续光滑的，但有不止一处增减性的变化，所以，**f'(a) = 0 是函数 *f* (*x*)  在*x* = *a*   处取得最小值的必要条件，仅仅是必要条件**
 
 总结：需要连续光滑的**可导函数**，还要求是**凸函数**
 
@@ -414,4 +411,277 @@ $$
 
 
 ### 七、神经网络的偏导数基础
+
+神经网络的计算往往会涉及成千上万个变量，这是因为构成神经网络的神经单元的权重和偏置都被作为变量处理。现在讨论下神经网络计算中所需的**多变量函数**的导数
+
+#### 多变量函数
+
+有两个以上的自变量的函数称为多变量函数。如：
+
+$z=x^2+y^2 \tag{x和y都是自变量}\\ 也可写成：f(x,y)=x^2+y^2$     
+
+<img src="深度学习.assets/image-20210528090650601-1622164013313.png" alt="image-20210528090650601" style="zoom:67%;" />
+
+再如：函数$f(x_1,x_2,\cdots,x_n)$：是有 *n* 个自变量$x_1,x_2,\cdots,x_n$的函数
+
+#### 偏导数（partial derivative）
+
+求导的方法也同样适用于多变量函数的情况。但是，由于有多个变量，所以必须指明对哪一个变量进行求导。在这个意义上，关于某个特定变量的导数就称为偏导数
+
+对$f(x,y)=x^2+y^2 $ 这个多自变量函数，求偏导：
+
+只看变量 x， 将 y 看作常数来求导：$\frac{\partial f(x,y)}{\partial x}$
+
+只看变量 y， 将 x 看作常数来求导：$\frac{\partial f(x,y)}{\partial y}$
+
+当 $z=f(w,x,b)=wx+b$  时，分别求偏导，得到：$\frac{\partial z}{\partial x} =w \qquad \frac{\partial z}{\partial w} =x \qquad  \frac{\partial z}{\partial b} =1 $
+
+问：当$z=w_1x_1+w_2x_2+b$ 时，求关于$x1, w2, b $的偏导数
+
+
+
+#### 多变量函数的最小值条件
+
+- 光滑的单变量函数 *y* = *f* (*x*) 在点 *x* 处取得最小值的**必要条件**是：导函数在该点取值 0；
+
+- 对于多变量函数，同样适用
+
+- 函数$z=f(x,y)$取得最小值的必要条件是：$\frac{\partial f(x,y)}{\partial x}=0 \qquad \frac{\partial f(x,y)}{\partial y}=0 $
+
+- 而且可以扩展到n个变量的多变量函数$f(x_1,x_2,\cdots,x_n)$
+
+- 举例： 求函数$z=f(x,y)=x^2+y^2$取得最小值时 *x*、*y* 的值
+
+  - 首先求关于x和关于y的偏导数：$\frac{\partial z}{\partial x}=2x \qquad \frac{\partial z}{\partial y}=2y$
+  - 函数取得最小值的必要条件是 *x* = 0，*y* = 0。此时函数值 *z* 为 0。由于$x^2+y^2\ge0$，所以我们知道这个函数值 0 就是最小值。
+  - 思考下：葡萄酒杯的底部~~
+
+  <img src="深度学习.assets/image-20210528090650601-1622164013313.png" alt="image-20210528090650601" style="zoom:67%;" />
+
+
+
+### 八、复合函数链式求导法则（误差反向传播法）
+
+复杂（复合）函数求导的链式法则。这个法则对于理神经网络中误差反向传播法很有必要
+
+#### 复合函数
+
+已知函数  $y=f(u)$，当 *u* 表示为  $u=g(x)$  时，*y* 作为 *x* 的函数可以表示为形如  $y=f(g(x))$ 的嵌套结构（*u* 和 *x* 表示多变量）。这时，嵌套结构的函数 *f*(*g*(*x*)) 称为 *f*(*u*) 和 *g*(*x*) 的**复合函数**。
+
+神经网络中，多个输入$x_1,x_2,\cdots,x_n$，将 *a*(*x*) 作为激活函数，求神经单元的输出 *y* 的过程如下：
+$$
+y=\alpha(w_1x_1+w_2x_2+\cdots+w_nx_n+b) \\
+w_1,w_2,\cdots ,w_n 为各个输入的权重 \\
+b为神经单元的偏置\\
+y即为：f(x_1,x_2,\cdots,x_n)多变量一次函数 和 \alpha(x) 激活函数的复合函数
+$$
+
+#### 单变量函数的链式法则
+
+单变量函数 $y=f(u)$，当 *u* 表示为单变量函数 $u=g(x)$时，复合函数 *f*(*g*(*x*)) 的导函数：
+$$
+\frac{dy}{dx}=\frac{dy}{du}\frac{du}{dx}
+$$
+同理：当 $y$为 $u$ 的函数，$u$为 $v$ 的函数，$v$为 $x$ 的单变量函数时：
+$$
+\frac{dy}{dx}=\frac{dy}{du}\frac{du}{dv}\frac{dv}{dx}
+$$
+举例：
+
+有Sigmoid函数和线性函数（w,b是常数，所以$u$是**单变量函数**) ：
+$$
+y=\frac{1}{1+e^{-u}}\qquad，\qquad u=wx+b \\y=f(g(x))=\sigma(wx+b)
+$$
+求: $\frac{dy}{dx}$  ?
+
+有：Sigmoid函数的导数公式：$\color{red}\sigma '(x)= \sigma(x)(1-\sigma(x))$
+$$
+\color{red}\sigma '(u)= \sigma(u)(1-\sigma(u))\\ \frac{dy}{du}=y(1-y)\\ \frac{du}{dx}=w
+$$
+得到：
+$$
+\frac {dy}{dx}= \frac{dy}{du}\frac {du}{dx}=y(1-y)w=\frac{w}{1+e^{-(wx+b)}}[1-\frac{1}{1+e^{-(wx+b)}}]
+$$
+
+
+#### 多变量函数的链式法则
+
+在多变量函数的情况下，链式法则的思想也同样适用。只要像处理分数一样对导数的式子进行变形即可。然而事情并没有这么简单，因为必须对相关的全部变量应用链式法则。
+
+变量 $z$ 为 $u$、$v$ 的函数  $z=f(u,v)$，如果 $u$、$v$  分别为 $x$、$y$ 的函数$u=g(x,y),v=h(x,y)$，则 $z$ 为 $x$、$y$的函数$z=f(g(x,y),h(x,y))$，此时下式（多变量函数的链式法则）成立。
+$$
+\frac{\partial z}{\partial x}=\frac{\partial z}{\partial u}\frac{\partial u}{\partial x}+\frac{\partial z}{\partial v}\frac{\partial v}{\partial x}\tag{求偏导}
+\\
+\frac{\partial z}{\partial y}=\frac{\partial z}{\partial u}\frac{\partial u}{\partial y}+\frac{\partial z}{\partial v}\frac{\partial v}{\partial y} 
+$$
+即：变量 $z$ 为 $u$、$v$ 的函数，$u$、$v$ 分别为 $x$、$y$ 的函数，$z$ 关于 $x$ 求导时，先对 $u$、$v$ 求导，然后与 $z$ 的相应导数相乘，最后将乘积加起来。如图：
+
+<img src="深度学习.assets/image-20210528123829984-1622176712445.png" alt="image-20210528123829984" style="zoom:80%;" />
+
+<img src="深度学习.assets/image-20210528124013000-1622176815124.png" alt="image-20210528124013000" style="zoom:80%;" />
+
+三个以上的多变量函数的情况下也同样成立！
+
+
+
+### 九、多变量函数的近似公式（梯度下降的基础）
+
+梯度下降法是确定神经网络的一种代表性的方法。在应用梯度下降法时，需要用到多变量函数的近似公式。
+
+#### 单变量函数的近似公式
+
+已知导数定义：
+$$
+f′(x) =\lim_{\Delta x\rightarrow 0}\frac{f(x+ \Delta x)-f(x)}{\Delta x}{}
+$$
+将$\Delta x$这个”无限趋于0“或者说”无限小“的量，替换成”微小”的量，得到：
+$$
+f′(x) \approx \frac{f(x+ \Delta x)-f(x)}{\Delta x}  \\
+$$
+整理得：
+$$
+f(x+ \Delta x)\approx  f(x)+ f′(x){\Delta x}
+$$
+这个就是，**单变量函数的近似公式**，这里$\Delta x$是"微小得数"
+
+举例：$y=f(x)=e^{x}$ ，求其 $x=0$ 附近 得近似公式
+$$
+(e^x)'=e^x  \\
+e^{x+\Delta x} \approx  e^{x}+e^{x}\Delta x\\
+x\rightarrow0\\
+e^x\approx 1+\Delta x \approx 1+x
+$$
+得到：$y=e^x$  和其在$x\rightarrow 0$时得近似函数 $y=1+x$
+
+如图：
+
+<img src="深度学习.assets/image-20210528131611536-1622178972633.png" alt="image-20210528131611536" style="zoom:80%;" />
+
+
+
+#### 多变量函数的近似公式
+
+将单变量函数的近似公式扩展到两个变量的函数。如果$x$、$y$ 作微小的变化，那么函数 $z = f(x, y)$ 的值将会怎样变化呢？答案就是**多变量函数近似公式**。*∆x*、*∆y* 为微小的数。
+$$
+f(x+ \Delta x，y+ \Delta y)\approx  f(x,y)+ \frac{\partial f(x,y)}{\partial x}{\Delta x}+\frac{\partial f(x,y)}{\partial y}{\Delta y}
+$$
+化简一下：定义$\Delta z =f(x+ \Delta x，y+ \Delta y)-f(x,y) $   得到：
+$$
+\Delta z \approx \frac{\partial z}{\partial x}\Delta x +\frac{\partial z}{\partial y}\Delta y
+$$
+通过这样的简化方式，就很容易将近似公式进行推广到哪个变量$x_1,x_2,\cdots ,x_n$。
+
+例如，变量 $z$为四个变量 $w,x,y,b$的函数时，近似公式如下所示
+$$
+\Delta z \approx \frac{\partial z}{\partial w}\Delta w +\frac{\partial z}{\partial x}\Delta x +\frac{\partial z}{\partial y}\Delta y+\frac{\partial z}{\partial b}\Delta b
+$$
+
+#### 近似公式的向量表示
+
+如上，四个变量的函数的近似公式 ，可以表示为如下两个向量的内积：（复习一下向量内积的坐标表示）
+$$
+梯度向量：
+\nabla \alpha =( \frac{\partial z}{\partial w} ,\frac{\partial z}{\partial x},\frac{\partial z}{\partial y},\frac{\partial z}{\partial b})\\
+
+位移向量：\Delta \beta =(\Delta w ,\Delta x ,\Delta y ,\Delta b )\\
+$$
+对于一般的 *n* 变量函数，近似公式也可以像这样表示为内积的形式
+
+
+
+### 十、梯度下降法的含义与公式
+
+应用数学最重要的任务之一就是寻找函数取最小值的点。研究一下著名的寻找最小值的点的方法——梯度下降法
+
+主要通过两个变量的函数来展开。在神经网络的计算中，往往需要处理成千上万个变量，但其数学原理和两个变量的情形是相同的
+
+#### 梯度下降法的思路
+
+1. 已知函数 *z* = *f*(*x*, *y*)，怎样求使函数取得最小值的 *x*、*y* 呢？最有名的方法就是利用“使函数 *z* = *f* (*x*, *y*) 取得最小值的 *x*、*y* 满足以下关系”：
+
+$$
+\frac{\partial f(x,y)}{\partial x}=0 \qquad \frac{\partial f(x,y)}{\partial y}=0 
+$$
+
+2. 然而，在实际问题中，联立上面的方程式通常不容易求解
+3. 梯度下降法是一种具有代表性的替代方法。该方法不直接求解上面的方程，而是通过慢慢地移动图像上的点进行摸索，从而找出函数的最小值。
+4. 
+
+#### 向量内积的回顾
+
+两个固定大小的非零向量 $\vec{a}$、$\vec{b}$。当 $\vec{b}$ 的方向与 $\vec{a}$ 相反时，内积 **a** *·* **b** 取最小值
+
+换句话说，当向量  $\vec {b}$   满足 $ \vec{b}=-k\vec{a} $   时，可以使得内积 **a** *·* **b** 取最小值
+
+#### 二变量函数的梯度下降法的基本式
+
+$$
+(\Delta x,\Delta y)=- \eta (\frac{\partial f(x,y)}{\partial x},\frac{\partial f(x,y)}{\partial y})
+$$
+
+利用关系式 (5)，如果从点(*x*, *y*)向点(*x* + *∆x*, *y* + *∆y*)移动，就可以从图像上点 (*x*, *y*) 的位置最快速地下坡。
+
+定义来了，向量$(\frac{\partial f(x,y)}{\partial x},\frac{\partial f(x,y)}{\partial y})$称为函数$f(x,y)$在点$(x,y)$处的**梯度（gradient)**
+
+举例：设 $∆x、∆y$ 为微小的数。在函数 $z = x^2 + y^2$ 中，当 $x$ 从 1 变到 $1+\Delta x$、$y $  从 2 变到$2+\Delta y$  时，求使这个函数减小得最快的向量 $(∆x, ∆y)$。
+
+解：
+
+有：$(\Delta x,\Delta y)=- \eta (\frac{\partial f(x,y)}{\partial x},\frac{\partial f(x,y)}{\partial y})$
+
+有：$z=f(x,y) = x^2 + y^2$
+
+得：$\frac{\partial f(x,y)}{\partial x}=2x \qquad ,\frac{\partial f(x,y)}{\partial y}=2y$   
+
+有：$(x,y)=(1,2)$ ，从（1，2）出发
+
+使得函数$f(x,y)$减小最快的向量是：$-\eta(2,4)$
+
+#### 梯度下降法及其用法
+
+二变量函数的梯度下降法：
+
+步骤1：利用$(\Delta x,\Delta y)=- \eta (\frac{\partial f(x,y)}{\partial x},\frac{\partial f(x,y)}{\partial y})$找到函数$f(x,y)$减小最快的方向$(\Delta x,\Delta y)$
+
+步骤2：从点 $(x, y)$ 向点  $(x + ∆x, y + ∆y)$  移动 ，到达新的点$(x,y)$
+
+步骤3：重复步骤1和步骤2，反复运算，得到$f(x,y)$的最小值
+
+#### 将梯度下降法推广到三个变量以上的情况
+
+**梯度下降法基本式**：
+$$
+(\Delta x_1,\Delta x_2,\cdots,\Delta x_n)=- \eta (\frac{\partial nf(x_1,x_2,\cdots,x_n)}{\partial x_1},\frac{\partial f(x_1,x_2,\cdots,x_n)}{\partial x_2},\cdots,\frac{\partial f(x_1,x_2,\cdots,x_n)}{\partial x_n})
+$$
+注意，左边的向量也称为位移向量，可以简写成$\Delta x$，右边的向量可以简写成：哈密顿算子 $\nabla f$
+
+得到梯度下降法基本式的**简洁写法**：
+$$
+\Delta x = - \eta  \nabla f
+$$
+再注意：
+
+#### **η** 的含义以及梯度下降法的要点
+
+*η* 可以看作人移动时的“步长”，根据 *η* 的值，可以确定下一步移动到哪个点。
+
+如果步长较大，那么可能会到达最小值点，也可能会直接跨过了最小值点（左图）。
+
+而如果步长较小，则可能会滞留在极小值点（右图）
+
+<img src="深度学习.assets/image-20210528162501792.png" alt="image-20210528162501792" style="zoom:80%;" />
+
+在神经网络的世界中，*η* 也称为学习率。遗憾的是，它的确定方法没有明确的标准，只能通过反复试验来寻找恰当的值。
+
+说明1：梯度下降法也可以用于单变量函数，只要梯度向量解释为一维向量（*n* = 1）的情况就可以了。也就是说，将偏导数替换为导数，将得到的下式作为梯度下降法的基本式。*∆x* = - *ηf'*(*x*)　（*η* 为正的微小常数）
+
+说明2：将 *η* 看作步长，实际上这并不严谨，正确的说法是，位移向量的大小才是步长。不过，虽然人的步长大体上是固定的，但梯度下降法的“步长”是不均匀的。因为梯度在不同的位置大小不同。因此，在应用数学的数值计算中，有时会对梯度下降法的基本式进行其他变形~~。
+
+
+
+### 十一、用Excel体验梯度下降法
+
+<img src="深度学习.assets/image-20210528164517007-1622191518564.png" alt="image-20210528164517007" style="zoom:80%;" />
+
+### 十二、最优化问题和回归分析
 
